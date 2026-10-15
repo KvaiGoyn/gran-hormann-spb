@@ -71,7 +71,8 @@
 
     <section class="studio" id="studio" aria-labelledby="studio-title">
       <div class="studio-intro"><p class="section-kicker"><span class="live-dot"></span> Интерактивный 3D-шоурум</p><h2 id="studio-title">Красиво снаружи.<br>Продумано внутри.</h2><p>Посмотрите, как устроено движение.<br>Выберите цвет. Откройте ворота.<br>Представьте их в своём доме.</p>
-        <fieldset class="color-fieldset"><legend>Ваш цвет <span id="color-name" aria-live="polite">Антрацит</span></legend><div class="swatches"><button class="swatch selected" style="--swatch:#3b4146" data-color="anthracite" aria-label="Антрацит" aria-pressed="true"></button><button class="swatch" style="--swatch:#ecece6" data-color="white" aria-label="Белый" aria-pressed="false"></button><button class="swatch" style="--swatch:#756f62" data-color="grey" aria-label="Серый алюминий" aria-pressed="false"></button><button class="swatch" style="--swatch:#77513a" data-color="wood" aria-label="Тёмный дуб" aria-pressed="false"></button></div></fieldset>
+        <fieldset class="surface-fieldset"><legend>Элемент модели</legend><div class="surface-tabs" role="group" aria-label="Что перекрасить"><button class="selected" type="button" data-surface="gate" aria-pressed="true">Ворота</button><button type="button" data-surface="facade" aria-pressed="false">Фасад</button><button type="button" data-surface="roof" aria-pressed="false">Кровля</button></div></fieldset>
+        <fieldset class="color-fieldset"><legend>Цвет <span id="color-name" aria-live="polite">Антрацит</span></legend><div class="swatches" id="scene-swatches"></div></fieldset>
         <button class="button button-yellow gate-toggle" id="gate-toggle" aria-pressed="false"><span class="gate-button-label">Открыть ворота</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19V5h14v14M8 9h8M8 12h8M12 20v-5m-3 3 3-3 3 3" stroke="currentColor" stroke-width="1.5"/></svg></button>
         <a class="text-link studio-config" href="/calculator/">Рассчитать под мой проём <span aria-hidden="true">↗</span></a>
       </div>
@@ -79,7 +80,7 @@
         <div class="scene-label"><span>Секционная система</span><span id="gate-state" aria-live="polite">Закрыто</span></div>
         <div id="gate-scene" role="img" aria-label="Интерактивная трёхмерная модель секционных ворот"><img class="scene-fallback" src="/media/architecture.webp" alt="Графитовые ворота современного гаража" loading="lazy"/><div class="scene-loading">Загружаем 3D-модель<span></span></div></div>
         <div class="scene-toolbar"><span class="drag-hint"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3M12 3v18M9 6l3-3 3 3M9 18l3 3 3-3" stroke="currentColor" stroke-width="1.2"/></svg> Потяните, чтобы рассмотреть</span><div class="view-buttons" role="group" aria-label="Ракурс модели"><button class="active" data-view="perspective" aria-pressed="true">Перспектива</button><button data-view="front" aria-pressed="false">Спереди</button></div></div>
-        <p class="model-caption">Визуализация принципа работы. Не техническая модель конкретной серии.</p>
+        <p class="model-caption">Детальная визуализация. Не техническая модель конкретной серии.</p>
       </div>
     </section>
 

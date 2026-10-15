@@ -1,6 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { panelPose } from '../src/configurator.js';
+import { readFile } from 'node:fs/promises';
+import { panelPose, scenePalettes } from '../src/configurator.js';
+
+test('detailed showroom model includes named door parts and tintable building surfaces', async () => {
+  const bytes = await readFile(new URL('../web-public/media/garage-apartment.glb', import.meta.url));
+  assert.equal(bytes.readUInt32LE(0), 0x46546c67);
+  const jsonLength = bytes.readUInt32LE(12);
+  const model = JSON.parse(bytes.subarray(20, 20 + jsonLength).toString());
+  const names = model.meshes.map(mesh => mesh.name || '');
+  assert.ok(names.some(name => name.includes('vehicle door closed finite door leaf')));
+  assert.ok(names.some(name => name.includes('original raised door panel')));
+  assert.ok(model.materials.some(material => material.name.includes('red running-bond brick')));
+  assert.ok(model.materials.some(material => material.name.includes('dark natural slate')));
+});
+
+test('showroom colors can be selected independently for gate, facade, and roof', () => {
+  assert.deepEqual(Object.keys(scenePalettes).sort(), ['facade', 'gate', 'roof']);
+  for (const palette of Object.values(scenePalettes)) {
+    assert.ok(palette.colors[palette.initial]);
+    assert.equal(Object.keys(palette.colors).length, 4);
+    assert.ok(Object.values(palette.colors).every(color => /^#[\da-f]{6}$/i.test(color.value)));
+  }
+});
 
 test('sectional panels follow a continuous path into the garage', () => {
   const closed = panelPose(0.25,0);

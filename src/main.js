@@ -1,15 +1,17 @@
 import './style.css';
 import './home.css';
 import { products, productCards } from './products.js';
-import { colors } from './configurator.js';
+import { colors, scenePalettes } from './configurator.js';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const money = amount => new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(amount);
 const grid = $('#product-grid');
-let selectedColor = 'anthracite';
 let scene;
+let selectedSurface = 'gate';
+const selectedSceneColors = Object.fromEntries(Object.entries(scenePalettes).map(([surface, palette]) => [surface, palette.initial]));
+const sceneColors = Object.fromEntries(Object.entries(scenePalettes).map(([surface, palette]) => [surface, palette.colors[palette.initial].value]));
 let opened = false;
 let currentQuote;
 let leadConfiguration;
@@ -133,15 +135,36 @@ if(calculator){
   const url=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='ГРАНЬ — предварительный расчёт.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
  });
 }
-$$('[data-color]').forEach(button => button.addEventListener('click', () => {
-  selectedColor = button.dataset.color;
-  $('#color-name').textContent = colors[selectedColor].name;
-  $$('[data-color]').forEach(item => {
+function renderSceneSwatches() {
+  const palette = scenePalettes[selectedSurface].colors;
+  const currentColor = selectedSceneColors[selectedSurface];
+  $('#color-name').textContent = palette[currentColor].name;
+  $('#scene-swatches').replaceChildren(...Object.entries(palette).map(([id, color]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `swatch${id === currentColor ? ' selected' : ''}`;
+    button.dataset.color = id;
+    button.style.setProperty('--swatch', color.value);
+    button.setAttribute('aria-label', color.name);
+    button.setAttribute('aria-pressed', String(id === currentColor));
+    button.addEventListener('click', () => {
+      selectedSceneColors[selectedSurface] = id;
+      sceneColors[selectedSurface] = color.value;
+      scene?.setColor(selectedSurface, color.value);
+      renderSceneSwatches();
+    });
+    return button;
+  }));
+}
+renderSceneSwatches();
+$$('.surface-tabs [data-surface]').forEach(button => button.addEventListener('click', () => {
+  selectedSurface = button.dataset.surface;
+  $$('.surface-tabs [data-surface]').forEach(item => {
     const selected = item === button;
     item.classList.toggle('selected', selected);
     item.setAttribute('aria-pressed', String(selected));
   });
-  scene?.setColor(colors[selectedColor].value);
+  renderSceneSwatches();
 }));
 if ($('#gate-toggle')) $('#gate-toggle').disabled = true;
 $('#gate-toggle')?.addEventListener('click', () => {
@@ -164,7 +187,7 @@ const sceneObserver = new IntersectionObserver(async ([entry]) => {
   sceneObserver.disconnect();
   try {
     const { createGateScene } = await import('./gate-scene.js');
-    scene = createGateScene($('#gate-scene'), { reducedMotion, color: colors[selectedColor].value });
+    scene = await createGateScene($('#gate-scene'), { reducedMotion, colors: sceneColors, assetUrl: `${import.meta.env.BASE_URL}media/garage-apartment.glb` });
     $('#gate-toggle').disabled = false;
   } catch (error) {
     console.warn('3D unavailable; image fallback is active.', error.message);
