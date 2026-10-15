@@ -1,0 +1,13 @@
+{
+  "version": "demo-2026-10-15",
+  "demo": true,
+  "currency": "RUB",
+  "series": "Секционные ворота",
+  "base": 39000,
+  "perSquareMeter": 6500,
+  "colors": {"white":{"label":"Белый RAL 9016","price":0},"anthracite":{"label":"Антрацит RAL 7016","price":6000},"grey":{"label":"Серый алюминий","price":6000},"wood":{"label":"Тёмный дуб","price":16000}},
+  "surfaces": {"smooth":{"label":"Гладкая","price":0},"woodgrain":{"label":"Woodgrain","price":3500},"micro":{"label":"Микроволна","price":6000}},
+  "drives": {"none":{"label":"Ручное управление","price":0},"standard":{"label":"Стандартный привод","price":24500},"comfort":{"label":"Привод + комплект безопасности","price":36500}},
+  "installation": 16500,
+  "delivery": {"pickup":{"label":"Самовывоз","price":0},"spb":{"label":"В пределах КАД","price":4500},"region":{"label":"До 50 км от КАД","price":8500}}
+}
