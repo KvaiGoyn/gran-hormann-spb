@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+.openai/local/
+*.log
+
+.wrangler/
+.sites-runtime/
+.env*
+.dev.vars*
+.next/
+site-build/
+generated/
+public/site/
+*.tsbuildinfo
