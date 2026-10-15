@@ -8,5 +8,5 @@ export const products = [
 ];
 
 export function productCards(items,base='/'){
-  return items.map(product => `<article class="product-card"><a href="/catalog/${product.id}/" aria-label="Подробнее: ${product.title}"><div class="product-image"><img src="${base}media/${product.image}" alt="${product.title} Hörmann" loading="lazy" width="600" height="600" /><span class="product-index">Hörmann</span></div><h3>${product.title}<span aria-hidden="true">↗</span></h3><p>${product.tag}</p></a></article>`).join('');
+  return items.map(product => `<article class="product-card"><a href="/catalog/${product.id}/" aria-label="Подробнее: ${product.title}"><div class="product-image"><img src="${base}media/${product.image}" alt="${product.title} Hörmann" loading="lazy" width="600" height="600" /><span class="product-index">Hörmann</span></div><h3>${product.title}<span aria-hidden="true">↗</span></h3><p>${product.tag}</p></a><button class="product-inquiry" data-lead="${product.title}">Обсудить вариант <span aria-hidden="true">↗</span></button></article>`).join('');
 }

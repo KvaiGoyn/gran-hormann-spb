@@ -5,6 +5,26 @@ export const colors = {
   wood: { name: 'Тёмный дуб', value: '#77513a' },
 };
 
+export const scenePalettes = {
+  gate: { label: 'Ворота', initial: 'anthracite', colors },
+  facade: {
+    label: 'Фасад', initial: 'brick', colors: {
+      white: { name: 'Тёплый белый', value: '#e7dfd2' },
+      sand: { name: 'Песочный', value: '#c3a27a' },
+      grey: { name: 'Серый', value: '#777b79' },
+      brick: { name: 'Терракотовый', value: '#a55743' },
+    },
+  },
+  roof: {
+    label: 'Кровля', initial: 'slate', colors: {
+      slate: { name: 'Сланец', value: '#58616b' },
+      graphite: { name: 'Графит', value: '#383e45' },
+      brown: { name: 'Коричневый', value: '#655144' },
+      green: { name: 'Тёмно-зелёный', value: '#40534b' },
+    },
+  },
+};
+
 // Panels travel up, around the curved rail, then horizontally under the ceiling.
 export function panelPose(startY, progress) {
   const distance = startY + Math.max(0, Math.min(1, progress)) * 3.7;
