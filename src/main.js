@@ -1,4 +1,5 @@
 import './style.css';
+import './home.css';
 import { products, productCards } from './products.js';
 import { colors } from './configurator.js';
 
