@@ -4,7 +4,7 @@ import { products, productCards } from './products.js';
 import { colors, scenePalettes } from './configurator.js';
 
 const $ = selector => document.querySelector(selector);
-const $$ = selector => [...document.querySelectorAll(selector)];
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const money = amount => new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(amount);
 const grid = $('#product-grid');
@@ -19,6 +19,22 @@ let leadTopic = 'Консультация';
 
 function renderProducts(filter) {
   if (!grid) return;
+  if (grid.dataset.cms === 'Y') {
+    const cards = $$('.product-card', grid);
+    const visible = cards.filter(card => {
+      const show = filter === 'all' || card.dataset.category === filter;
+      card.hidden = !show;
+      return show;
+    });
+    grid.classList.toggle('business-grid', filter === 'business');
+    $('.catalog-count').textContent = `${visible.length} ${visible.length === 1 ? 'направление' : visible.length >= 2 && visible.length <= 4 ? 'направления' : 'направлений'}`;
+    $$('[data-filter]').forEach(button => {
+      const active = button.dataset.filter === filter;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    return;
+  }
   const items = products.filter(product => filter === 'all' || product.category === filter);
   grid.classList.toggle('business-grid', filter === 'business');
   grid.innerHTML = productCards(items, import.meta.env.BASE_URL);
@@ -31,7 +47,8 @@ function renderProducts(filter) {
 }
 renderProducts(grid?.dataset.initial || 'home');
 $$('nav a').forEach(link => {
-  if (new URL(link.href).pathname.replace(/\/$/,'') === location.pathname.replace(/\/$/,'') && location.pathname !== '/') link.setAttribute('aria-current','page');
+  const target = new URL(link.href);
+  if (target.pathname.replace(/\/$/,'') === location.pathname.replace(/\/$/,'') && target.search === location.search && location.pathname !== '/') link.setAttribute('aria-current','page');
 });
 function closeMenu() {
   $('#mobile-menu').hidden = true;
@@ -56,11 +73,14 @@ function openLead(topic='Консультация',configuration=null) {
   leadConfiguration = configuration;
   const form=$('#dialog-form');
   if(form.dataset.saved){form.reset();delete form.dataset.saved;[...form.elements].forEach(field=>field.disabled=false);form.querySelector('[type="submit"]').innerHTML='Отправить заявку <span>↗</span>';form.querySelector('.lead-status').textContent='';}
-  $('#lead-context').textContent = configuration ? `Секционные ворота ${configuration.width} × ${configuration.height} мм · ${money(currentQuote.price)} по демонстрационным тарифам. Комплектация будет приложена к заявке.` : topic==='Консультация'?'Расскажите о задаче. Начнём с деталей.':topic;
+  $('#lead-context').textContent = configuration ? `Секционные ворота ${configuration.width} × ${configuration.height} мм · ${money(currentQuote.price)}${currentQuote.demo ? ' по демонстрационным тарифам' : ' по действующим тарифам'}. Комплектация будет приложена к заявке.` : topic==='Консультация'?'Расскажите о задаче. Начнём с деталей.':topic;
   openDialog($('#lead-dialog'));
 }
 function openVideo() {
-  openDialog($('#video-dialog'));
+  const dialog = $('#video-dialog');
+  const frame = $('#video-frame');
+  if (!dialog || !frame) return;
+  openDialog(dialog);
   const video = document.createElement('video');
   video.src = `${import.meta.env.BASE_URL}media/architecture-film.mp4`;
   video.poster = `${import.meta.env.BASE_URL}media/architecture.webp`;
@@ -69,9 +89,9 @@ function openVideo() {
   video.playsInline = true;
   video.autoplay = !reducedMotion.matches;
   video.setAttribute('aria-label','ГРАНЬ. Архитектура и детали — визуальный этюд без звука');
-  $('#video-frame').replaceChildren(video);
+  frame.replaceChildren(video);
 }
-$('#video-dialog').addEventListener('close', () => $('#video-frame').replaceChildren());
+$('#video-dialog')?.addEventListener('close', () => $('#video-frame')?.replaceChildren());
 document.addEventListener('click', event => {
   const button = event.target.closest('button,a');
   if (!button) return;
@@ -115,12 +135,18 @@ $$('[data-lead-form]').forEach(form=>{
 
 const calculator=$('#calculator-form');
 if(calculator){
- const {calculatePrice}=await import('../server/pricing.js');
+ const {calculatePrice,tariffs:fallbackTariffs}=await import('../server/pricing.js');
  const fields=calculator.elements;
+ let rateTable=fallbackTariffs;
  fields.color.value='anthracite';fields.drive.value='standard';fields.delivery.value='spb';
+ function replaceOptions(field,map){
+  const selected=field.value;
+  field.replaceChildren(...Object.entries(map).map(([value,item])=>new Option(item.label,value)));
+  field.value=Object.hasOwn(map,selected)?selected:Object.keys(map)[0];
+ }
  function updateQuote(){
   const values={width:fields.width.valueAsNumber,height:fields.height.valueAsNumber,color:fields.color.value,surface:fields.surface.value,drive:fields.drive.value,delivery:fields.delivery.value,installation:fields.installation.checked};
-  currentQuote=calculatePrice(values);
+  currentQuote=calculatePrice(values,rateTable);
   $('#quote-request').disabled=!currentQuote;$('#quote-download').disabled=!currentQuote;
   $('#quote-error').textContent=currentQuote?'':'Укажите целые размеры: ширина 2000–6000 мм, высота 1800–3500 мм.';
   $('#quote-total').textContent=currentQuote?money(currentQuote.price):'—';
@@ -131,15 +157,33 @@ if(calculator){
  calculator.addEventListener('input',updateQuote);calculator.addEventListener('submit',event=>event.preventDefault());updateQuote();
  $('#quote-download').addEventListener('click',()=>{
   if(!currentQuote)return;
-  const text=['ГРАНЬ · Предварительный расчёт','ДЕМОНСТРАЦИОННЫЕ ТАРИФЫ. Не прайс Hörmann и не оферта.',`Тариф: ${currentQuote.tariffVersion}`,'',...currentQuote.items.map(item=>`${item.label}: ${money(item.amount)}`),'',`ИТОГО: ${money(currentQuote.price)}`,'Точную цену и возможность изготовления подтверждает специалист после замера.'].join('\n');
+  const text=['ГРАНЬ · Предварительный расчёт',currentQuote.demo?'ДЕМОНСТРАЦИОННЫЕ ТАРИФЫ. Не прайс Hörmann и не оферта.':'Предварительный расчёт по тарифам сайта. Итог подтверждается после замера.',`Тариф: ${currentQuote.tariffVersion}`,'',...currentQuote.items.map(item=>`${item.label}: ${money(item.amount)}`),'',`ИТОГО: ${money(currentQuote.price)}`,'Точную цену и возможность изготовления подтверждает специалист после замера.'].join('\n');
   const url=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='ГРАНЬ — предварительный расчёт.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
  });
+ fetch('/api/tariffs/',{headers:{Accept:'application/json'},cache:'no-store'}).then(async response=>{
+  if(!response.ok)return;
+  const liveRates=await response.json();
+  if(!liveRates || !liveRates.colors || !liveRates.surfaces || !liveRates.drives || !liveRates.delivery)return;
+  rateTable=liveRates;
+  replaceOptions(fields.color,rateTable.colors);
+  replaceOptions(fields.surface,rateTable.surfaces);
+  replaceOptions(fields.drive,rateTable.drives);
+  replaceOptions(fields.delivery,rateTable.delivery);
+  const demoLabel=$('[data-demo-label]'),disclaimer=$('[data-quote-disclaimer]'),version=$('[data-quote-version]');
+  if(demoLabel)demoLabel.hidden=!rateTable.demo;
+  if(disclaimer)disclaimer.textContent=rateTable.demo?'Цены демонстрационные и не являются прайсом Hörmann или офертой. Итоговую цену подтверждает специалист после замера.':'Предварительный расчёт по настроенным тарифам. Итоговую цену подтверждает специалист после замера.';
+  if(version)version.textContent=`Тарифы: ${rateTable.version}`;
+  updateQuote();
+ }).catch(()=>{});
 }
 function renderSceneSwatches() {
+  const colorName = $('#color-name');
+  const swatches = $('#scene-swatches');
+  if (!colorName || !swatches) return;
   const palette = scenePalettes[selectedSurface].colors;
   const currentColor = selectedSceneColors[selectedSurface];
-  $('#color-name').textContent = palette[currentColor].name;
-  $('#scene-swatches').replaceChildren(...Object.entries(palette).map(([id, color]) => {
+  colorName.textContent = palette[currentColor].name;
+  swatches.replaceChildren(...Object.entries(palette).map(([id, color]) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `swatch${id === currentColor ? ' selected' : ''}`;

@@ -1,0 +1,7 @@
+[
+  {"code":"catalog","title":"Продукция","url":"/catalog/","mobileOnly":"N"},
+  {"code":"calculator","title":"Калькулятор","url":"/calculator/","mobileOnly":"N"},
+  {"code":"service","title":"Сервис","url":"/service/","mobileOnly":"N"},
+  {"code":"contacts","title":"Контакты","url":"/contacts/","mobileOnly":"N"},
+  {"code":"showroom","title":"3D-шоурум","url":"/#studio","mobileOnly":"Y"}
+]
