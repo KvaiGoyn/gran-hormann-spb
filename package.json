@@ -7,6 +7,7 @@
     "dev": "node scripts/build-frontend.mjs && node scripts/run-framework.mjs dev",
     "build": "node scripts/build-frontend.mjs && node scripts/run-framework.mjs build",
     "preview": "vite preview --host 127.0.0.1",
+    "preview:static": "node scripts/preview-static.mjs",
     "test": "node --test tests/*.test.js",
     "export:bitrix": "npm run build && node scripts/export-bitrix.mjs",
     "export:static": "npm run build && node scripts/export-static.mjs",
