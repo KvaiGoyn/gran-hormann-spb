@@ -18,7 +18,7 @@ for(const [route,page] of Object.entries(pageContent)){
  entries[route.slice(1).replaceAll('/','-')]=file;
  routes[route]=route.slice(1)+'/index.html';
 }
-await build({configFile:false,base:'/site/',publicDir:'web-public',build:{outDir:'site-build',emptyOutDir:true,rolldownOptions:{input:entries}}});
+await build({configFile:false,base:'/site/',publicDir:'web-public',build:{outDir:'site-build',emptyOutDir:true,cssMinify:false,rolldownOptions:{input:entries}}});
 const pages={};
 for(const [route,path] of Object.entries(routes))pages[route]=await readFile(`site-build/generated/html/${path}`,'utf8');
 await writeFile('generated/pages.json',JSON.stringify(pages));
