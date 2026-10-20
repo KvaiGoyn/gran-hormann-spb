@@ -831,8 +831,6 @@ form>.button { width: 100%; }
 
   .section-intro { font-size: 14px; margin-top: 24px; }
 
-  .section-intro br { display: none; }
-
   .catalog-count { font-size: 11px; }
 
   .filter-tabs { gap: 3px; }
@@ -860,8 +858,6 @@ form>.button { width: 100%; }
   .studio h2 { font-size: 37px; }
 
   .studio-intro>p:not(.section-kicker) { font-size: 14px; margin-top: 20px; }
-
-  .studio-intro>p:not(.section-kicker) br { display: none; }
 
   .studio .section-kicker { font-size: 12px; }
 
@@ -903,8 +899,6 @@ form>.button { width: 100%; }
 
   .approach-copy h2 { font-size: 38px; }
 
-  .approach-copy h2 br:nth-child(2) { display: none; }
-
   .approach-lead { font-size: 14px; margin-top: 20px; }
 
   .approach-points { gap: 24px; }
@@ -925,15 +919,11 @@ form>.button { width: 100%; }
 
   .steps h3 { font-size: 24px; margin-top: 0; }
 
-  .steps h3 br { display: none; }
-
   .steps p { font-size: 13px; margin-top: 12px; max-width: none; }
 
   .faq { display: block; }
 
   .faq>div>p:last-child { display: none; }
-
-  .faq h2 br { display: none; }
 
   .faq-list { margin-top: 30px; }
 
