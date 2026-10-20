@@ -7,6 +7,9 @@ export const products = [
   { id: 'technical', title: 'Технические двери', category: 'business', tag: 'Для пространства с задачей', image: 'hormann-technical.webp', description: 'Функциональные двери для технических и коммерческих помещений. Подбор исполнения по назначению объекта.', series: ['Технические', 'Противопожарные'], detail: 'Требования к исполнению и документам зависят от проекта. Нужные характеристики подтверждаются технической документацией выбранной модели.', url: 'https://www.hoermann.ru/products/tehnicheskie-dveri/' },
 ];
 
-export function productCards(items,base='/'){
-  return items.map(product => `<article class="product-card"><a href="/catalog/${product.id}/" aria-label="Подробнее: ${product.title}"><div class="product-image"><img src="${base}media/${product.image}" alt="${product.title} Hörmann" loading="lazy" width="600" height="600" /><span class="product-index">Hörmann</span></div><h3>${product.title}<span aria-hidden="true">↗</span></h3><p>${product.tag}</p></a><button class="product-inquiry" data-lead="${product.title}">Обсудить вариант <span aria-hidden="true">↗</span></button></article>`).join('');
+export function productCards(items,base='/',routeBase='/'){
+  return items.map(product => {
+    const productUrl = routeBase.startsWith('/') ? `${routeBase}catalog/${product.id}/index.html` : new URL(`catalog/${product.id}/index.html`,routeBase).href;
+    return `<article class="product-card"><a href="${productUrl}" aria-label="Подробнее: ${product.title}"><div class="product-image"><img src="${base}media/${product.image}" alt="${product.title} Hörmann" loading="lazy" width="600" height="600" /><span class="product-index">Hörmann</span></div><h3>${product.title}<span aria-hidden="true">↗</span></h3><p>${product.tag}</p></a><button class="product-inquiry" data-lead="${product.title}">Обсудить вариант <span aria-hidden="true">↗</span></button></article>`;
+  }).join('');
 }

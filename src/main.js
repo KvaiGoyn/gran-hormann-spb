@@ -2,12 +2,14 @@ import './style.css';
 import './home.css';
 import { products, productCards } from './products.js';
 import { colors, scenePalettes } from './configurator.js';
+import { calculatePrice, tariffs as fallbackTariffs } from '../server/pricing.js';
 
 const $ = selector => document.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const money = amount => new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(amount);
 const grid = $('#product-grid');
+const siteRoot = new URL(document.querySelector('meta[name="site-root"]')?.content || '/', location.href).href;
 let scene;
 let selectedSurface = 'gate';
 const selectedSceneColors = Object.fromEntries(Object.entries(scenePalettes).map(([surface, palette]) => [surface, palette.initial]));
@@ -37,7 +39,7 @@ function renderProducts(filter) {
   }
   const items = products.filter(product => filter === 'all' || product.category === filter);
   grid.classList.toggle('business-grid', filter === 'business');
-  grid.innerHTML = productCards(items, import.meta.env.BASE_URL);
+  grid.innerHTML = productCards(items, siteRoot, siteRoot);
   $('.catalog-count').textContent = `${items.length} ${items.length === 2 || items.length === 4 ? 'направления' : 'направлений'}`;
   $$('[data-filter]').forEach(button => {
     const active = button.dataset.filter === filter;
@@ -48,7 +50,8 @@ function renderProducts(filter) {
 renderProducts(grid?.dataset.initial || 'home');
 $$('nav a').forEach(link => {
   const target = new URL(link.href);
-  if (target.pathname.replace(/\/$/,'') === location.pathname.replace(/\/$/,'') && target.search === location.search && location.pathname !== '/') link.setAttribute('aria-current','page');
+  const pagePath = pathname => pathname.replace(/index\.html$/,'').replace(/\/$/,'');
+  if (pagePath(target.pathname) === pagePath(location.pathname) && target.search === location.search && pagePath(location.pathname) !== '') link.setAttribute('aria-current','page');
 });
 function closeMenu() {
   $('#mobile-menu').hidden = true;
@@ -82,8 +85,8 @@ function openVideo() {
   if (!dialog || !frame) return;
   openDialog(dialog);
   const video = document.createElement('video');
-  video.src = `${import.meta.env.BASE_URL}media/architecture-film.mp4`;
-  video.poster = `${import.meta.env.BASE_URL}media/architecture.webp`;
+  video.src = new URL('media/architecture-film.mp4', siteRoot).href;
+  video.poster = new URL('media/architecture.webp', siteRoot).href;
   video.controls = true;
   video.muted = true;
   video.playsInline = true;
@@ -96,7 +99,7 @@ document.addEventListener('click', event => {
   const button = event.target.closest('button,a');
   if (!button) return;
   if (button.hasAttribute('data-filter')) renderProducts(button.dataset.filter);
-  if (button.hasAttribute('data-product')) location.href=`/catalog/${button.dataset.product}/`;
+  if (button.hasAttribute('data-product')) location.href = new URL(`catalog/${button.dataset.product}/index.html`, siteRoot).href;
   if (button.hasAttribute('data-config')) openLead();
   if (button.hasAttribute('data-lead')) openLead(button.dataset.lead);
   if (button.hasAttribute('data-quote') && currentQuote) openLead('Расчёт секционных ворот',currentQuote.configuration);
@@ -135,7 +138,6 @@ $$('[data-lead-form]').forEach(form=>{
 
 const calculator=$('#calculator-form');
 if(calculator){
- const {calculatePrice,tariffs:fallbackTariffs}=await import('../server/pricing.js');
  const fields=calculator.elements;
  let rateTable=fallbackTariffs;
  fields.color.value='anthracite';fields.drive.value='standard';fields.delivery.value='spb';
@@ -160,7 +162,7 @@ if(calculator){
   const text=['ГРАНЬ · Предварительный расчёт',currentQuote.demo?'ДЕМОНСТРАЦИОННЫЕ ТАРИФЫ. Не прайс Hörmann и не оферта.':'Предварительный расчёт по тарифам сайта. Итог подтверждается после замера.',`Тариф: ${currentQuote.tariffVersion}`,'',...currentQuote.items.map(item=>`${item.label}: ${money(item.amount)}`),'',`ИТОГО: ${money(currentQuote.price)}`,'Точную цену и возможность изготовления подтверждает специалист после замера.'].join('\n');
   const url=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='ГРАНЬ — предварительный расчёт.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
  });
- fetch('/api/tariffs/',{headers:{Accept:'application/json'},cache:'no-store'}).then(async response=>{
+ if(location.protocol !== 'file:') fetch('/api/tariffs/',{headers:{Accept:'application/json'},cache:'no-store'}).then(async response=>{
   if(!response.ok)return;
   const liveRates=await response.json();
   if(!liveRates || !liveRates.colors || !liveRates.surfaces || !liveRates.drives || !liveRates.delivery)return;
@@ -231,7 +233,7 @@ const sceneObserver = new IntersectionObserver(async ([entry]) => {
   sceneObserver.disconnect();
   try {
     const { createGateScene } = await import('./gate-scene.js');
-    scene = await createGateScene($('#gate-scene'), { reducedMotion, colors: sceneColors, assetUrl: `${import.meta.env.BASE_URL}media/garage-apartment.glb` });
+    scene = await createGateScene($('#gate-scene'), { reducedMotion, colors: sceneColors, assetUrl: new URL('media/garage-apartment.glb', siteRoot).href });
     $('#gate-toggle').disabled = false;
   } catch (error) {
     console.warn('3D unavailable; image fallback is active.', error.message);
