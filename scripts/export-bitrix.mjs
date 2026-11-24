@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir, rm, cp, readdir, rename } from 'node:fs/promises';
-import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
+import { unzipSync, zipSync } from 'fflate';
 import { products } from '../src/products.js';
 
 const pages = JSON.parse(await readFile('generated/pages.json', 'utf8'));
@@ -52,6 +52,17 @@ function areaName(markup, index) {
   const className = markup.match(/^<section\b[^>]*\bclass="([^"]+)"/i)?.[1]?.split(/\s+/)[0] ?? 'content';
   const readable = className.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'content';
   return `${String(index + 1).padStart(2, '0')}-${readable}`;
+}
+
+async function collectFiles(directory, archiveDirectory = '') {
+  const files = {};
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const archivePath = archiveDirectory ? `${archiveDirectory}/${entry.name}` : entry.name;
+    const filePath = `${directory}/${entry.name}`;
+    if (entry.isDirectory()) Object.assign(files, await collectFiles(filePath, archivePath));
+    else if (entry.isFile()) files[archivePath] = await readFile(filePath);
+  }
+  return files;
 }
 
 let areaCount = 2;
@@ -222,8 +233,10 @@ const packagePath = 'release/gran-bitrix-package.zip';
 const temporaryPackagePath = `${packagePath}.tmp`;
 await rm(temporaryPackagePath, { force: true });
 try {
-  execFileSync('zip', ['-qr', '../gran-bitrix-package.zip.tmp', ...await readdir(out)], { cwd: out });
-  execFileSync('zip', ['-T', '../gran-bitrix-package.zip.tmp'], { cwd: out, stdio: 'inherit' });
+  const packageFiles = await collectFiles(out);
+  const packageBytes = zipSync(packageFiles);
+  assert.deepEqual(Object.keys(unzipSync(packageBytes)).sort(), Object.keys(packageFiles).sort(), 'ZIP contents mismatch');
+  await writeFile(temporaryPackagePath, packageBytes);
   await rename(temporaryPackagePath, packagePath);
 } finally {
   await rm(temporaryPackagePath, { force: true });
