@@ -1,4 +1,5 @@
-import { readFile, writeFile, mkdir, rm, cp, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm, cp, readdir, rename } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { products } from '../src/products.js';
 
@@ -217,4 +218,14 @@ assert.ok(areaCount > 2, 'Editable include areas were not generated');
 assert.equal(productListComponentCount, 2, 'Home and catalog pages must render products from the CMS list component');
 assert.ok((await readFile(`${out}/include/gran/common/header.php`, 'utf8')).includes('gran:site.menu'), 'Common header must use the menu component');
 assert.ok((await readFile(`${out}/catalog/index.php`, 'utf8')).includes('$catalogProductCode'), 'Catalog must route dynamic product details');
-console.log(`Exported ${Object.keys(pages).length} pages, ${areaCount} editable include areas, dynamic menu and product list components, and CMS integrations to ${out}.`);
+const packagePath = 'release/gran-bitrix-package.zip';
+const temporaryPackagePath = `${packagePath}.tmp`;
+await rm(temporaryPackagePath, { force: true });
+try {
+  execFileSync('zip', ['-qr', '../gran-bitrix-package.zip.tmp', ...await readdir(out)], { cwd: out });
+  execFileSync('zip', ['-T', '../gran-bitrix-package.zip.tmp'], { cwd: out, stdio: 'inherit' });
+  await rename(temporaryPackagePath, packagePath);
+} finally {
+  await rm(temporaryPackagePath, { force: true });
+}
+console.log(`Exported ${Object.keys(pages).length} pages, ${areaCount} editable include areas, dynamic menu and product list components, and CMS integrations to ${out}; packaged ${packagePath}.`);
